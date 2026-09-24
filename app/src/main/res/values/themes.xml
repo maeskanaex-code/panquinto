@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.RecipeFinder" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">#FFF6EE</item>
+        <item name="android:statusBarColor">#F7C19C</item>
+        <item name="android:navigationBarColor">#FFF6EE</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>
