@@ -6,6 +6,8 @@ import androidx.compose.ui.graphics.Color
 // LIGHT THEME PALETTE — Soft Peach Header & Warm Cream Background
 // =============================================================
 
+val WarmCream                = Color(0xFFFAF0E6)
+
 // Header / Top bar background (soft peach from reference image)
 val PeachHeader              = Color(0xFFF7C19C)
 val PeachHeaderDarkText      = Color(0xFF33221A)
@@ -21,7 +23,7 @@ val LightSecondary           = Color(0xFFD8532A)
 val LightOnSecondary         = Color(0xFFFFFFFF)
 
 // Search bar & Surface Variants
-val LightBackground          = Color(0xFFFFF6EE) // Soft cream background
+val LightBackground          = Color(0xFFFAF0E6) // Soft warm linen background
 val LightOnBackground        = Color(0xFF2D1F17) // Dark warm text
 
 val LightSurface             = Color(0xFFFFF8F2) // Meal card background
