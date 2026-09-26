@@ -37,6 +37,8 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,17 +46,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mody.recipefinder.R
+import com.mody.recipefinder.RecipeApp
 import com.mody.recipefinder.domain.model.Category
 import com.mody.recipefinder.domain.model.Meal
 import com.mody.recipefinder.ui.components.ErrorBox
 import com.mody.recipefinder.ui.components.LoadingBox
 import com.mody.recipefinder.ui.components.MealCard
+import com.mody.recipefinder.ui.components.NoInternetDialog
 import com.mody.recipefinder.ui.components.WeatherCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,6 +73,15 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var menuOpen by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val app = context.applicationContext as RecipeApp
+    val isOnline by app.networkMonitor.isOnline.collectAsState(initial = true)
+    var dialogDismissed by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isOnline) {
+        if (!isOnline) dialogDismissed = false
+    }
 
     Scaffold(
         topBar = {
@@ -246,6 +260,14 @@ fun HomeScreen(
                 }
             }
         }
+    }
+
+    if (!isOnline && !dialogDismissed) {
+        NoInternetDialog(
+            onRetry = {
+                if (isOnline) dialogDismissed = true
+            }
+        )
     }
 }
 

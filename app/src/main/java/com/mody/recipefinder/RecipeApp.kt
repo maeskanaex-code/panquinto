@@ -2,6 +2,7 @@ package com.mody.recipefinder
 
 import android.app.Application
 import com.mody.recipefinder.data.local.AppDatabase
+import com.mody.recipefinder.data.network.NetworkMonitor
 import com.mody.recipefinder.data.preferences.ThemePreferences
 import com.mody.recipefinder.data.remote.NetworkModule
 import com.mody.recipefinder.data.repository.MealRepositoryImpl
@@ -11,7 +12,7 @@ import com.mody.recipefinder.data.repository.WeatherRepositoryImpl
  * Application subclass. Instantiated once before any Activity.
  *
  * Holds the singletons the whole app shares — Room database, both Retrofit
- * services, both repositories, and theme preferences.
+ * services, both repositories, theme preferences, and network monitor.
  */
 class RecipeApp : Application() {
 
@@ -34,5 +35,9 @@ class RecipeApp : Application() {
 
     val themePreferences: ThemePreferences by lazy {
         ThemePreferences(this)
+    }
+
+    val networkMonitor: NetworkMonitor by lazy {
+        NetworkMonitor(this)
     }
 }
