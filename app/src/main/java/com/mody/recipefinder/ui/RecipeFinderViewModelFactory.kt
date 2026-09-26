@@ -4,17 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.mody.recipefinder.data.repository.MealRepository
 import com.mody.recipefinder.data.repository.WeatherRepository
+import com.mody.recipefinder.ui.assistant.AssistantViewModel
 import com.mody.recipefinder.ui.detail.DetailViewModel
 import com.mody.recipefinder.ui.favorites.FavoritesViewModel
 import com.mody.recipefinder.ui.home.HomeViewModel
 
-/**
- * Manual ViewModel factory.
- *
- * ViewModels with constructor arguments need a factory. This one supplies
- * both repositories — HomeViewModel uses both, Detail/Favorites use only
- * the meal repository.
- */
 class RecipeFinderViewModelFactory(
     private val mealRepository: MealRepository,
     private val weatherRepository: WeatherRepository
@@ -31,6 +25,9 @@ class RecipeFinderViewModelFactory(
 
             modelClass.isAssignableFrom(FavoritesViewModel::class.java) ->
                 FavoritesViewModel(mealRepository) as T
+
+            modelClass.isAssignableFrom(AssistantViewModel::class.java) ->
+                AssistantViewModel(mealRepository) as T
 
             else -> throw IllegalArgumentException(
                 "Unknown ViewModel class: ${modelClass.name}"

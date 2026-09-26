@@ -1,11 +1,14 @@
-package com.mody.recipefinder.ui.home
+package com.mody.recipefinder.ui.assistant
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -16,15 +19,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,87 +36,55 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mody.recipefinder.R
-import com.mody.recipefinder.domain.model.Category
 import com.mody.recipefinder.domain.model.Meal
 import com.mody.recipefinder.ui.components.ErrorBox
 import com.mody.recipefinder.ui.components.LoadingBox
 import com.mody.recipefinder.ui.components.MealCard
-import com.mody.recipefinder.ui.components.WeatherCard
+
+private val SUGGESTED_PROMPTS = listOf(
+    "Quick dinner",
+    "For kids",
+    "Spicy",
+    "Vegetarian",
+    "Something sweet",
+    "Fish for dinner",
+    "Comfort food"
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
-    viewModel: HomeViewModel,
+fun AssistantScreen(
+    viewModel: AssistantViewModel,
     onMealClick: (String) -> Unit,
-    onFavoritesClick: () -> Unit,
-    onSettingsClick: () -> Unit,
-    onAssistantClick: () -> Unit
+    onBack: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var menuOpen by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
+                        text = "What should I cook?",
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 },
-                actions = {
-                    IconButton(onClick = onAssistantClick) {
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
                         Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = "Assistant",
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
-                    }
-                    IconButton(onClick = onFavoritesClick) {
-                        Icon(
-                            imageVector = Icons.Default.Favorite,
-                            contentDescription = "Favorites",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                    Box {
-                        IconButton(onClick = { menuOpen = true }) {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = "More",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = menuOpen,
-                            onDismissRequest = { menuOpen = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Settings") },
-                                leadingIcon = {
-                                    Icon(Icons.Default.Settings, contentDescription = null)
-                                },
-                                onClick = {
-                                    menuOpen = false
-                                    onSettingsClick()
-                                }
-                            )
-                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -132,23 +99,12 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Weather + suggestion card — only shows when weather loads.
-            if (state.weather != null) {
-                WeatherCard(
-                    weather = state.weather!!,
-                    suggestedMeal = state.suggestedMeal,
-                    suggestionReason = state.suggestionReason,
-                    onMealClick = onMealClick,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
-
             TextField(
                 value = state.query,
                 onValueChange = viewModel::onQueryChange,
                 placeholder = {
                     Text(
-                        text = "Search",
+                        text = "Ask for a recipe…",
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
@@ -172,15 +128,49 @@ fun HomeScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { viewModel.search() })
+                keyboardActions = KeyboardActions(onSearch = { viewModel.ask() })
             )
 
-            if (state.categories.isNotEmpty()) {
-                CategoryChips(
-                    categories = state.categories,
-                    onCategoryClick = { viewModel.loadCategory(it.name) }
+            Button(
+                onClick = { viewModel.ask() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text("Find recipes")
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(SUGGESTED_PROMPTS) { prompt ->
+                    AssistChip(
+                        onClick = {
+                            viewModel.onQueryChange(prompt)
+                            viewModel.ask(prompt)
+                        },
+                        label = { Text(prompt) },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            labelColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            if (state.reason != null && state.results.isNotEmpty()) {
+                Text(
+                    text = state.reason!!,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
             }
 
@@ -188,15 +178,17 @@ fun HomeScreen(
                 when {
                     state.isLoading -> LoadingBox()
 
+                    state.notUnderstood -> NotUnderstoodBox()
+
                     state.errorMessage != null -> ErrorBox(
                         message = state.errorMessage!!,
-                        onRetry = { viewModel.search() }
+                        onRetry = { viewModel.ask() }
                     )
 
-                    state.searchResults.isEmpty() -> EmptyState()
+                    state.results.isEmpty() -> EmptyPromptBox()
 
-                    else -> MealGrid(
-                        meals = state.searchResults,
+                    else -> ResultsGrid(
+                        meals = state.results,
                         favoriteIds = state.favoriteIds,
                         onMealClick = onMealClick,
                         onFavoriteClick = viewModel::toggleFavorite
@@ -208,29 +200,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun CategoryChips(
-    categories: List<Category>,
-    onCategoryClick: (Category) -> Unit
-) {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(categories) { category ->
-            AssistChip(
-                onClick = { onCategoryClick(category) },
-                label = { Text(category.name) },
-                colors = AssistChipDefaults.assistChipColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    labelColor = MaterialTheme.colorScheme.onSurface
-                )
-            )
-        }
-    }
-}
-
-@Composable
-private fun MealGrid(
+private fun ResultsGrid(
     meals: List<Meal>,
     favoriteIds: Set<String>,
     onMealClick: (String) -> Unit,
@@ -255,16 +225,50 @@ private fun MealGrid(
 }
 
 @Composable
-private fun EmptyState() {
+private fun NotUnderstoodBox() {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Search for a recipe or pick a category",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text = "Sorry, we didn't find something suitable.",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "Maybe try 'chicken', 'quick', or 'vegetarian'.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun EmptyPromptBox() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Ask me anything",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "Type a request, or tap a suggestion above.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
         )
     }
 }

@@ -6,6 +6,7 @@ object Routes {
     const val DETAIL = "detail/{mealId}"
     const val FAVORITES = "favorites"
     const val SETTINGS = "settings"
+    const val ASSISTANT = "assistant"
 
     fun detailRoute(mealId: String): String = "detail/$mealId"
 }

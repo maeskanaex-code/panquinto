@@ -12,6 +12,8 @@ import androidx.navigation.navArgument
 import com.mody.recipefinder.data.repository.MealRepository
 import com.mody.recipefinder.data.repository.WeatherRepository
 import com.mody.recipefinder.ui.RecipeFinderViewModelFactory
+import com.mody.recipefinder.ui.assistant.AssistantScreen
+import com.mody.recipefinder.ui.assistant.AssistantViewModel
 import com.mody.recipefinder.ui.detail.DetailScreen
 import com.mody.recipefinder.ui.detail.DetailViewModel
 import com.mody.recipefinder.ui.favorites.FavoritesScreen
@@ -44,6 +46,9 @@ fun AppNavGraph(
                 },
                 onSettingsClick = {
                     navController.navigate(Routes.SETTINGS)
+                },
+                onAssistantClick = {
+                    navController.navigate(Routes.ASSISTANT)
                 }
             )
         }
@@ -80,6 +85,19 @@ fun AppNavGraph(
 
         composable(Routes.SETTINGS) {
             SettingsScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.ASSISTANT) {
+            val vm: AssistantViewModel = viewModel(
+                factory = RecipeFinderViewModelFactory(repository, weatherRepository)
+            )
+            AssistantScreen(
+                viewModel = vm,
+                onMealClick = { mealId ->
+                    navController.navigate(Routes.detailRoute(mealId))
+                },
                 onBack = { navController.popBackStack() }
             )
         }
