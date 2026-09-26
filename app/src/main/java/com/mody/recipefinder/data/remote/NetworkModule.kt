@@ -9,18 +9,20 @@ import java.util.concurrent.TimeUnit
 /**
  * Manual dependency wiring for the network layer.
  *
- * Why manual: for a 4-screen MVP, Hilt/Dagger is ceremony without benefit.
- * This object is the single place that knows how to build a Retrofit
- * instance — swap the base URL or add interceptors here, nowhere else.
+ * Two Retrofit instances: one per base URL. Retrofit cannot switch base
+ * URLs per-call, so two APIs means two instances.
+ *
+ * Both share the same OkHttp client so the logging interceptor and timeouts
+ * are configured in exactly one place.
  */
 object NetworkModule {
 
-    private const val BASE_URL = "https://www.themealdb.com/api/json/v1/1/"
+    private const val MEALDB_BASE_URL = "https://www.themealdb.com/api/json/v1/1/"
+    private const val WEATHER_BASE_URL = "https://api.weatherapi.com/v1/"
 
     /**
      * Logs full request/response bodies to Logcat under tag "OkHttp".
-     * Level BODY is verbose but invaluable while developing and for
-     * portfolio evidence.
+     * Level BODY is verbose but invaluable for portfolio screenshots.
      */
     private val loggingInterceptor: HttpLoggingInterceptor
         get() = HttpLoggingInterceptor().apply {
@@ -35,16 +37,21 @@ object NetworkModule {
             .build()
     }
 
-    /**
-     * lazy: the Retrofit instance is built once, the first time someone
-     * accesses MealApiService. Every subsequent access reuses it.
-     */
     val mealApiService: MealApiService by lazy {
         Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(MEALDB_BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(MealApiService::class.java)
+    }
+
+    val weatherApiService: WeatherApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl(WEATHER_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(WeatherApiService::class.java)
     }
 }

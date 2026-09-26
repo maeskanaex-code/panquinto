@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mody.recipefinder.data.repository.MealRepository
+import com.mody.recipefinder.data.repository.WeatherRepository
 import com.mody.recipefinder.ui.RecipeFinderViewModelFactory
 import com.mody.recipefinder.ui.detail.DetailScreen
 import com.mody.recipefinder.ui.detail.DetailViewModel
@@ -17,19 +18,12 @@ import com.mody.recipefinder.ui.favorites.FavoritesScreen
 import com.mody.recipefinder.ui.favorites.FavoritesViewModel
 import com.mody.recipefinder.ui.home.HomeScreen
 import com.mody.recipefinder.ui.home.HomeViewModel
+import com.mody.recipefinder.ui.settings.SettingsScreen
 
-/**
- * The whole navigation graph.
- *
- * Three destinations: Home (search + categories + results grid),
- * Detail (one recipe), Favorites (Room-backed list).
- *
- * Results are shown inside Home — there is no separate Results screen
- * in this MVP. If the grid feels cramped, we can add one later.
- */
 @Composable
 fun AppNavGraph(
     repository: MealRepository,
+    weatherRepository: WeatherRepository,
     navController: NavHostController = rememberNavController()
 ) {
     NavHost(
@@ -38,7 +32,7 @@ fun AppNavGraph(
     ) {
         composable(Routes.HOME) {
             val vm: HomeViewModel = viewModel(
-                factory = RecipeFinderViewModelFactory(repository)
+                factory = RecipeFinderViewModelFactory(repository, weatherRepository)
             )
             HomeScreen(
                 viewModel = vm,
@@ -47,6 +41,9 @@ fun AppNavGraph(
                 },
                 onFavoritesClick = {
                     navController.navigate(Routes.FAVORITES)
+                },
+                onSettingsClick = {
+                    navController.navigate(Routes.SETTINGS)
                 }
             )
         }
@@ -57,7 +54,7 @@ fun AppNavGraph(
         ) { backStackEntry ->
             val mealId = backStackEntry.arguments?.getString("mealId").orEmpty()
             val vm: DetailViewModel = viewModel(
-                factory = RecipeFinderViewModelFactory(repository)
+                factory = RecipeFinderViewModelFactory(repository, weatherRepository)
             )
             LaunchedEffect(mealId) {
                 if (mealId.isNotEmpty()) vm.loadMeal(mealId)
@@ -70,13 +67,19 @@ fun AppNavGraph(
 
         composable(Routes.FAVORITES) {
             val vm: FavoritesViewModel = viewModel(
-                factory = RecipeFinderViewModelFactory(repository)
+                factory = RecipeFinderViewModelFactory(repository, weatherRepository)
             )
             FavoritesScreen(
                 viewModel = vm,
                 onMealClick = { mealId ->
                     navController.navigate(Routes.detailRoute(mealId))
                 },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.SETTINGS) {
+            SettingsScreen(
                 onBack = { navController.popBackStack() }
             )
         }

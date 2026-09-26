@@ -2,9 +2,12 @@ package com.mody.recipefinder.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mody.recipefinder.data.repository.MealRepository
+import com.mody.recipefinder.data.repository.WeatherRepository
+import com.mody.recipefinder.domain.MealSuggestionEngine
 import com.mody.recipefinder.domain.model.Category
 import com.mody.recipefinder.domain.model.Meal
-import com.mody.recipefinder.data.repository.MealRepository
+import com.mody.recipefinder.domain.model.Weather
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,11 +22,18 @@ data class HomeUiState(
     val searchResults: List<Meal> = emptyList(),
     val favoriteIds: Set<String> = emptySet(),
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+
+    // --- Weather feature ---
+    val weather: Weather? = null,
+    val suggestedMeal: Meal? = null,
+    val suggestionReason: String? = null,
+    val isWeatherLoading: Boolean = false
 )
 
 class HomeViewModel(
-    private val repository: MealRepository
+    private val mealRepository: MealRepository,
+    private val weatherRepository: WeatherRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -32,11 +42,12 @@ class HomeViewModel(
     init {
         loadCategories()
         observeFavorites()
+        loadWeatherAndSuggestion()
     }
 
     private fun observeFavorites() {
         viewModelScope.launch {
-            repository.observeFavorites().collect { favorites ->
+            mealRepository.observeFavorites().collect { favorites ->
                 _uiState.value = _uiState.value.copy(
                     favoriteIds = favorites.map { it.id }.toSet()
                 )
@@ -47,9 +58,9 @@ class HomeViewModel(
     fun toggleFavorite(meal: Meal) {
         viewModelScope.launch {
             if (_uiState.value.favoriteIds.contains(meal.id)) {
-                repository.removeFavorite(meal.id)
+                mealRepository.removeFavorite(meal.id)
             } else {
-                repository.addFavorite(meal)
+                mealRepository.addFavorite(meal)
             }
         }
     }
@@ -63,7 +74,7 @@ class HomeViewModel(
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
         viewModelScope.launch {
-            repository.searchMealsByName(query)
+            mealRepository.searchMealsByName(query)
                 .onSuccess { meals ->
                     _uiState.value = _uiState.value.copy(
                         searchResults = meals,
@@ -83,7 +94,7 @@ class HomeViewModel(
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
         viewModelScope.launch {
-            repository.filterMealsByCategory(categoryName)
+            mealRepository.filterMealsByCategory(categoryName)
                 .onSuccess { meals ->
                     _uiState.value = _uiState.value.copy(
                         searchResults = meals,
@@ -101,7 +112,7 @@ class HomeViewModel(
 
     private fun loadCategories() {
         viewModelScope.launch {
-            repository.getCategories()
+            mealRepository.getCategories()
                 .onSuccess { categories ->
                     _uiState.value = _uiState.value.copy(categories = categories)
                 }
@@ -110,5 +121,52 @@ class HomeViewModel(
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
+    }
+
+    // --- Weather feature ---
+
+    private fun loadWeatherAndSuggestion() {
+        _uiState.value = _uiState.value.copy(isWeatherLoading = true)
+
+        viewModelScope.launch {
+            val weatherResult = weatherRepository.getCurrentWeather(DEFAULT_CITY)
+
+            weatherResult.onSuccess { weather ->
+                val category = MealSuggestionEngine.suggestCategory(
+                    conditionCode = weather.conditionCode,
+                    temperatureCelsius = weather.temperatureCelsius
+                )
+                val reason = MealSuggestionEngine.suggestReason(
+                    conditionCode = weather.conditionCode,
+                    temperatureCelsius = weather.temperatureCelsius
+                )
+
+                val mealResult = mealRepository.filterMealsByCategory(category)
+                val suggestedMeal = mealResult.getOrNull()?.randomOrNull()
+
+                _uiState.value = _uiState.value.copy(
+                    weather = weather,
+                    suggestedMeal = suggestedMeal,
+                    suggestionReason = reason,
+                    isWeatherLoading = false
+                )
+            }.onFailure {
+                // Silent fail — hide the weather card, keep the app working.
+                _uiState.value = _uiState.value.copy(
+                    weather = null,
+                    suggestedMeal = null,
+                    suggestionReason = null,
+                    isWeatherLoading = false
+                )
+            }
+        }
+    }
+
+    fun retryWeather() {
+        loadWeatherAndSuggestion()
+    }
+
+    companion object {
+        private const val DEFAULT_CITY = "Alexandria"
     }
 }

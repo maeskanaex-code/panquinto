@@ -4,12 +4,13 @@ import android.app.Application
 import com.mody.recipefinder.data.local.AppDatabase
 import com.mody.recipefinder.data.remote.NetworkModule
 import com.mody.recipefinder.data.repository.MealRepositoryImpl
+import com.mody.recipefinder.data.repository.WeatherRepositoryImpl
 
 /**
  * Application subclass. Instantiated once before any Activity.
  *
- * Holds the singletons the whole app shares — Room database, Retrofit
- * service, and the repository. This is manual dependency injection.
+ * Holds the singletons the whole app shares — Room database, both Retrofit
+ * services, and both repositories. Manual dependency injection.
  */
 class RecipeApp : Application() {
 
@@ -17,10 +18,16 @@ class RecipeApp : Application() {
         AppDatabase.getInstance(this)
     }
 
-    val repository: MealRepositoryImpl by lazy {
+    val mealRepository: MealRepositoryImpl by lazy {
         MealRepositoryImpl(
             api = NetworkModule.mealApiService,
             dao = database.favoriteMealDao()
+        )
+    }
+
+    val weatherRepository: WeatherRepositoryImpl by lazy {
+        WeatherRepositoryImpl(
+            api = NetworkModule.weatherApiService
         )
     }
 }

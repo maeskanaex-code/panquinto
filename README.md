@@ -1,6 +1,6 @@
-# Recipe Finder
+# Panquinto
 
-Android portfolio app demonstrating end-to-end **Retrofit + Room + Jetpack Compose** in a clean MVVM architecture.
+Android app for discovering recipes from TheMealDB's live REST API, with offline favorites and a modern Compose UI.
 
 ## What it does
 
@@ -9,12 +9,6 @@ Android portfolio app demonstrating end-to-end **Retrofit + Room + Jetpack Compo
 - Shows full recipe details: image, ingredients with measurements, instructions
 - Saves favorites to a **local Room database** that persists across app restarts
 - Full light + dark theme support with Material 3
-
-## Screens
-
-| Home | Detail | Favorites |
-|------|--------|-----------|
-| Search + category chips | Ingredients + instructions | Room-persisted list |
 
 ## Tech stack
 
@@ -32,19 +26,19 @@ Android portfolio app demonstrating end-to-end **Retrofit + Room + Jetpack Compo
 ```
 app/
 ├── data/
-│   ├── remote/      Retrofit service, network module, DTOs
-│   ├── local/       Room database, DAO, entity
-│   ├── mapper/      DTO ↔ Domain ↔ Entity conversion
-│   └── repository/  Repository interface + implementation
+│   ├── remote/              Retrofit service, network module, DTOs
+│   ├── local/               Room database, DAO, entity
+│   ├── mapper/              DTO ↔ Domain ↔ Entity conversion
+│   └── repository/          Repository interface + implementation
 ├── domain/
-│   └── model/       Clean domain models (Meal, Ingredient, Category)
+│   └── model/               Clean domain models (Meal, Ingredient, Category)
 └── ui/
-    ├── home/        Search + category filter screen
-    ├── detail/      Recipe detail screen
-    ├── favorites/   Saved meals screen
-    ├── navigation/  Navigation graph
-    ├── components/  Reusable Compose UI
-    └── theme/       Warm Material 3 color palette
+    ├── home/                Search + category filter screen
+    ├── detail/              Recipe detail screen
+    ├── favorites/           Saved meals screen
+    ├── navigation/          Navigation graph
+    ├── components/          Reusable Compose UI
+    └── theme/               Warm Material 3 color palette
 ```
 
 ## Setup
@@ -54,18 +48,17 @@ app/
 3. Sync Gradle
 4. Run on an emulator or device (min SDK 24)
 
-**No API key needed** — the project uses TheMealDB's free test API (`key=1`).
+**No API key needed** — the project uses TheMealDB's free test API.
 
-## Notes
+## Roadmap
 
-- TheMealDB returns ingredients as 20 numbered fields (`strIngredient1..20`) rather than a JSON array. The mapper handles this by zipping ingredient and measure slots and dropping empty ones — see `MealMappers.kt`.
-- The `filter.php` endpoint returns only partial meal data (id + name + thumbnail). The DTO marks all non-essential fields nullable to handle this.
+See [ROADMAP.md](ROADMAP.md) for the planned upgrades: weather-based meal suggestions, recipe assistant, custom launcher icon, splash screen, and privacy policy.
 
 ## Author
 
-**Mahmoud Dev** — Android developer
+**Mahmoud Shehata** — Android developer
+- GitHub: [@maeskanaex-code](https://github.com/maeskanaex-code)
 - Kwork: [kwork.com/user/mahmoud_dev](https://kwork.com/user/mahmoud_dev)
-- GitHub: [@maeskanax-code](https://github.com/maeskanax-code)
 
 ## License
 
