@@ -4,10 +4,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -81,19 +81,22 @@ fun WeatherCard(
                 }
             }
 
-            // Right side — suggested meal thumbnail
+            // Right side — suggested meal thumbnail (fixed 1:1 square)
             if (suggestedMeal != null) {
                 Spacer(Modifier.width(12.dp))
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.clickable { onMealClick(suggestedMeal.id) }
+                    modifier = Modifier
+                        .width(72.dp)
+                        .clickable { onMealClick(suggestedMeal.id) }
                 ) {
                     AsyncImage(
                         model = suggestedMeal.thumbnail,
                         contentDescription = suggestedMeal.name,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .size(72.dp)
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
                             .clip(RoundedCornerShape(12.dp))
                     )
                     Spacer(Modifier.height(4.dp))
