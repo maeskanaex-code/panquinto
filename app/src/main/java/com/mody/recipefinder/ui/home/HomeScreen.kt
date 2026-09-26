@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
@@ -127,80 +128,121 @@ fun HomeScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        Column(
+
+        // Single scrollable surface: headers + grid
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(innerPadding),
+            contentPadding = PaddingValues(bottom = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Weather + suggestion card — only shows when weather loads.
+            // ---------- HEADERS (span full width) ----------
+
             if (state.weather != null) {
-                WeatherCard(
-                    weather = state.weather!!,
-                    suggestedMeal = state.suggestedMeal,
-                    suggestionReason = state.suggestionReason,
-                    onMealClick = onMealClick,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    WeatherCard(
+                        weather = state.weather!!,
+                        suggestedMeal = state.suggestedMeal,
+                        suggestionReason = state.suggestionReason,
+                        onMealClick = onMealClick,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
             }
 
-            TextField(
-                value = state.query,
-                onValueChange = viewModel::onQueryChange,
-                placeholder = {
-                    Text(
-                        text = "Search",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                singleLine = true,
-                shape = CircleShape,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { viewModel.search() })
-            )
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                TextField(
+                    value = state.query,
+                    onValueChange = viewModel::onQueryChange,
+                    placeholder = {
+                        Text(
+                            text = "Search",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    singleLine = true,
+                    shape = CircleShape,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { viewModel.search() })
+                )
+            }
 
             if (state.categories.isNotEmpty()) {
-                CategoryChips(
-                    categories = state.categories,
-                    onCategoryClick = { viewModel.loadCategory(it.name) }
-                )
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    CategoryChips(
+                        categories = state.categories,
+                        onCategoryClick = { viewModel.loadCategory(it.name) }
+                    )
+                }
             }
 
-            Box(modifier = Modifier.fillMaxSize()) {
-                when {
-                    state.isLoading -> LoadingBox()
+            // ---------- STATE-BASED CONTENT ----------
 
-                    state.errorMessage != null -> ErrorBox(
-                        message = state.errorMessage!!,
-                        onRetry = { viewModel.search() }
-                    )
+            when {
+                state.isLoading -> {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                            contentAlignment = Alignment.Center
+                        ) { LoadingBox() }
+                    }
+                }
 
-                    state.searchResults.isEmpty() -> EmptyState()
+                state.errorMessage != null -> {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            ErrorBox(
+                                message = state.errorMessage!!,
+                                onRetry = { viewModel.search() }
+                            )
+                        }
+                    }
+                }
 
-                    else -> MealGrid(
-                        meals = state.searchResults,
-                        favoriteIds = state.favoriteIds,
-                        onMealClick = onMealClick,
-                        onFavoriteClick = viewModel::toggleFavorite
-                    )
+                state.searchResults.isEmpty() -> {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        EmptyState()
+                    }
+                }
+
+                else -> {
+                    items(state.searchResults, key = { it.id }) { meal ->
+                        MealCard(
+                            meal = meal,
+                            onClick = { onMealClick(meal.id) },
+                            isFavorite = state.favoriteIds.contains(meal.id),
+                            onFavoriteClick = { viewModel.toggleFavorite(meal) }
+                        )
+                    }
                 }
             }
         }
@@ -230,34 +272,11 @@ private fun CategoryChips(
 }
 
 @Composable
-private fun MealGrid(
-    meals: List<Meal>,
-    favoriteIds: Set<String>,
-    onMealClick: (String) -> Unit,
-    onFavoriteClick: (Meal) -> Unit
-) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxSize()
-    ) {
-        items(meals, key = { it.id }) { meal ->
-            MealCard(
-                meal = meal,
-                onClick = { onMealClick(meal.id) },
-                isFavorite = favoriteIds.contains(meal.id),
-                onFavoriteClick = { onFavoriteClick(meal) }
-            )
-        }
-    }
-}
-
-@Composable
 private fun EmptyState() {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 64.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

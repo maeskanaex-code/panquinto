@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
@@ -94,132 +94,151 @@ fun AssistantScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        Column(
+
+        // Single scrollable surface: headers + grid
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(innerPadding),
+            contentPadding = PaddingValues(bottom = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            TextField(
-                value = state.query,
-                onValueChange = viewModel::onQueryChange,
-                placeholder = {
-                    Text(
-                        text = "Ask for a recipe…",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                singleLine = true,
-                shape = CircleShape,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { viewModel.ask() })
-            )
+            // ---------- HEADERS (span full width) ----------
 
-            Button(
-                onClick = { viewModel.ask() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            ) {
-                Text("Find recipes")
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(SUGGESTED_PROMPTS) { prompt ->
-                    AssistChip(
-                        onClick = {
-                            viewModel.onQueryChange(prompt)
-                            viewModel.ask(prompt)
-                        },
-                        label = { Text(prompt) },
-                        colors = AssistChipDefaults.assistChipColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            labelColor = MaterialTheme.colorScheme.onSurface
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                TextField(
+                    value = state.query,
+                    onValueChange = viewModel::onQueryChange,
+                    placeholder = {
+                        Text(
+                            text = "Ask for a recipe…",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            if (state.reason != null && state.results.isNotEmpty()) {
-                Text(
-                    text = state.reason!!,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    singleLine = true,
+                    shape = CircleShape,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { viewModel.ask() })
                 )
             }
 
-            Box(modifier = Modifier.fillMaxSize()) {
-                when {
-                    state.isLoading -> LoadingBox()
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Button(
+                    onClick = { viewModel.ask() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Text("Find recipes")
+                }
+            }
 
-                    state.notUnderstood -> NotUnderstoodBox()
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(SUGGESTED_PROMPTS) { prompt ->
+                        AssistChip(
+                            onClick = {
+                                viewModel.onQueryChange(prompt)
+                                viewModel.ask(prompt)
+                            },
+                            label = { Text(prompt) },
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                labelColor = MaterialTheme.colorScheme.onSurface
+                            )
+                        )
+                    }
+                }
+            }
 
-                    state.errorMessage != null -> ErrorBox(
-                        message = state.errorMessage!!,
-                        onRetry = { viewModel.ask() }
-                    )
-
-                    state.results.isEmpty() -> EmptyPromptBox()
-
-                    else -> ResultsGrid(
-                        meals = state.results,
-                        favoriteIds = state.favoriteIds,
-                        onMealClick = onMealClick,
-                        onFavoriteClick = viewModel::toggleFavorite
+            if (state.reason != null && state.results.isNotEmpty()) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Text(
+                        text = state.reason!!,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                     )
                 }
             }
-        }
-    }
-}
 
-@Composable
-private fun ResultsGrid(
-    meals: List<Meal>,
-    favoriteIds: Set<String>,
-    onMealClick: (String) -> Unit,
-    onFavoriteClick: (Meal) -> Unit
-) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxSize()
-    ) {
-        items(meals, key = { it.id }) { meal ->
-            MealCard(
-                meal = meal,
-                onClick = { onMealClick(meal.id) },
-                isFavorite = favoriteIds.contains(meal.id),
-                onFavoriteClick = { onFavoriteClick(meal) }
-            )
+            // ---------- STATE-BASED CONTENT ----------
+
+            when {
+                state.isLoading -> {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                            contentAlignment = Alignment.Center
+                        ) { LoadingBox() }
+                    }
+                }
+
+                state.notUnderstood -> {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        NotUnderstoodBox()
+                    }
+                }
+
+                state.errorMessage != null -> {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            ErrorBox(
+                                message = state.errorMessage!!,
+                                onRetry = { viewModel.ask() }
+                            )
+                        }
+                    }
+                }
+
+                state.results.isEmpty() -> {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        EmptyPromptBox()
+                    }
+                }
+
+                else -> {
+                    items(state.results, key = { it.id }) { meal ->
+                        MealCard(
+                            meal = meal,
+                            onClick = { onMealClick(meal.id) },
+                            isFavorite = state.favoriteIds.contains(meal.id),
+                            onFavoriteClick = { viewModel.toggleFavorite(meal) }
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -228,7 +247,7 @@ private fun ResultsGrid(
 private fun NotUnderstoodBox() {
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -253,7 +272,7 @@ private fun NotUnderstoodBox() {
 private fun EmptyPromptBox() {
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
