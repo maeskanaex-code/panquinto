@@ -2,6 +2,10 @@ package com.mody.recipefinder.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -9,6 +13,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.mody.recipefinder.RecipeApp
+import com.mody.recipefinder.data.preferences.AppTheme
 import com.mody.recipefinder.data.repository.MealRepository
 import com.mody.recipefinder.data.repository.WeatherRepository
 import com.mody.recipefinder.ui.RecipeFinderViewModelFactory
@@ -21,6 +27,7 @@ import com.mody.recipefinder.ui.favorites.FavoritesViewModel
 import com.mody.recipefinder.ui.home.HomeScreen
 import com.mody.recipefinder.ui.home.HomeViewModel
 import com.mody.recipefinder.ui.settings.SettingsScreen
+import kotlinx.coroutines.launch
 
 @Composable
 fun AppNavGraph(
@@ -84,8 +91,18 @@ fun AppNavGraph(
         }
 
         composable(Routes.SETTINGS) {
+            val app = LocalContext.current.applicationContext as RecipeApp
+            val currentTheme by app.themePreferences.theme.collectAsState(initial = AppTheme.WARM)
+            val scope = rememberCoroutineScope()
+
             SettingsScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                selectedTheme = currentTheme,
+                onThemeSelected = { newTheme ->
+                    scope.launch {
+                        app.themePreferences.setTheme(newTheme)
+                    }
+                }
             )
         }
 

@@ -7,9 +7,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.mody.recipefinder.data.preferences.AppTheme
 import com.mody.recipefinder.ui.navigation.AppNavGraph
+import com.mody.recipefinder.ui.theme.AppThemeName
 import com.mody.recipefinder.ui.theme.RecipeFinderTheme
 
 class MainActivity : ComponentActivity() {
@@ -23,7 +27,9 @@ class MainActivity : ComponentActivity() {
         val weatherRepository = app.weatherRepository
 
         setContent {
-            RecipeFinderTheme {
+            val appTheme by app.themePreferences.theme.collectAsState(initial = AppTheme.WARM)
+
+            RecipeFinderTheme(appTheme = appTheme.toThemeName()) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -36,4 +42,10 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
+
+private fun AppTheme.toThemeName(): AppThemeName = when (this) {
+    AppTheme.WARM -> AppThemeName.WARM
+    AppTheme.COOL -> AppThemeName.COOL
+    AppTheme.FOREST -> AppThemeName.FOREST
 }
