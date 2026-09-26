@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -116,18 +115,6 @@ fun SettingsScreen(
                     context.startActivity(intent)
                 }
             )
-
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                color = MaterialTheme.colorScheme.outlineVariant
-            )
-
-            SettingRow(
-                icon = Icons.Default.Info,
-                title = "About",
-                subtitle = "Panquinto · Version 1.0",
-                onClick = { }
-            )
         }
     }
 }
@@ -206,4 +193,4 @@ private fun SettingRow(
 }
 
 private const val PRIVACY_POLICY_URL =
-    "https://github.com/maeskanaex-code/panquinto-privacy"
+    "https://raw.githubusercontent.com/maeskanaex-code/panquinto-privacy/refs/heads/main/README.md"
